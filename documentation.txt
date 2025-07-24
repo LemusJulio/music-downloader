@@ -1,0 +1,75 @@
+3. Aplicación del Patrón a un Proyecto de Emprendimiento
+
+Proyecto: Aplicación de Gestión de Descargas
+
+Objetivo: Crear una aplicación web para gestionar descargas de archivos, proporcionando una interfaz intuitiva y eficiente para los usuarios.
+
+Aplicación de Scrum:
+
+*   Stakeholder: El usuario o equipo que requiere una aplicación de gestión de descargas. Este rol proporciona la visión general del proyecto y define los requisitos principales.
+*   Product Owner: Responsable de definir las características, priorizar las tareas y gestionar el backlog. El Product Owner trabaja en estrecha colaboración con el Stakeholder para comprender sus necesidades y traducirlas en elementos accionables para el equipo de desarrollo.
+*   Scrum Master: Facilita el proceso Scrum y asegura que el equipo se adhiera a los principios de Scrum. El Scrum Master elimina los impedimentos que puedan surgir y ayuda al equipo a mantenerse enfocado en la entrega de valor.
+*   Equipo: Desarrolladores trabajando en el backend (Python en app.py) y frontend (JavaScript en static/script.js y HTML en templates/index.html). El equipo es autoorganizado y multidisciplinario, responsable de entregar incrementos funcionales del producto en cada sprint.
+
+4. Ciclo Iterativo del Proceso Scrum
+
+Stakeholder -> Product Owner: El Stakeholder comunica sus necesidades y expectativas al Product Owner.
+Product Owner -> Scrum Master: El Product Owner trabaja con el Scrum Master para planificar los sprints y asegurar que el equipo tenga los recursos necesarios.
+Scrum Master -> Equipo: El Scrum Master facilita la comunicación y colaboración dentro del equipo.
+Equipo -> Entrega de Valor: El equipo desarrolla y entrega incrementos funcionales del producto.
+Entrega de Valor -> Revisión (Voz del Cliente): Se recopila la retroalimentación de los usuarios y se utiliza para mejorar el producto.
+Revisión (Voz del Cliente) -> Ajustes: Se realizan ajustes en el backlog y en el plan del proyecto en función de la retroalimentación recibida.
+Ajustes -> Nuevo Sprint: Se inicia un nuevo sprint con las tareas priorizadas en el backlog.
+
+5. Resultados Esperados
+
+*   Gestión eficiente de descargas: La aplicación debe permitir a los usuarios iniciar, pausar, reanudar y cancelar descargas de forma sencilla.
+*   Interfaz de usuario amigable: La interfaz debe ser intuitiva y fácil de usar, incluso para usuarios sin experiencia técnica.
+*   Proceso de descarga confiable: La aplicación debe garantizar que las descargas se completen correctamente y sin errores.
+*   Adaptabilidad a los requisitos cambiantes: La aplicación debe ser flexible y adaptable a los requisitos cambiantes del usuario y del mercado.
+*   Mejora continua: El uso de Scrum permite una mejora continua del producto a través de la retroalimentación y la adaptación.
+
+6. Conclusión
+
+La aplicación de Scrum a este proyecto de gestión de descargas permite un desarrollo iterativo, retroalimentación continua y un enfoque en la entrega de valor al usuario. El uso de roles bien definidos y ciclos de entrega frecuentes proporciona al equipo una estructura flexible, eficiente y centrada en la validación real del producto.
+
+7. Caso Práctico: Desarrollo del Proyecto de Descargas
+
+7.1 Visión del Producto
+
+Crear una aplicación web sencilla y eficiente para gestionar las descargas de archivos, que sea fácil de usar, confiable y adaptable a las necesidades del usuario. La aplicación debe proporcionar una experiencia de usuario intuitiva y permitir a los usuarios controlar sus descargas de forma eficiente.
+
+7.2 Desarrollo por Roles Scrum
+
+*   Stakeholder: Requiere una solución de gestión de descargas que sea fácil de usar y confiable.
+*   Product Owner: Define el backlog con características como el inicio de la descarga, la visualización del progreso, la recuperación de información y la gestión de la cola de descargas.
+*   Scrum Master: Facilita el proceso Scrum, asegurando que el equipo tenga los recursos necesarios y que se sigan los principios de Scrum.
+*   Equipo: Desarrolla la aplicación utilizando Python, JavaScript, HTML y CSS, siguiendo las mejores prácticas de desarrollo de software.
+
+7.3 Sprints Realizados
+
+*   Sprint 1: Funcionalidad básica de descarga (iniciar descarga, mostrar progreso).
+    *   Tareas: Implementar la función de inicio de descarga en el backend (app.py), crear la interfaz de usuario para iniciar la descarga (templates/index.html), mostrar el progreso de la descarga en la interfaz de usuario (static/script.js).
+*   Sprint 2: Implementar la recuperación de información de descarga.
+    *   Tareas: Implementar la función de recuperación de información de descarga en el backend (app.py), mostrar la información de descarga en la interfaz de usuario (static/script.js).
+*   Sprint 3: Mejorar la interfaz de usuario.
+    *   Tareas: Mejorar el diseño de la interfaz de usuario (static/styles.css), agregar funciones de gestión de la cola de descargas (static/script.js).
+
+7.4 Ejemplo de Backlog Inicial (resumido)
+
+*   Implementar el inicio de la descarga.
+*   Mostrar el progreso de la descarga.
+*   Recuperar y mostrar la información de la descarga.
+*   Mejorar la interfaz de usuario.
+*   Implementar la gestión de la cola de descargas.
+
+7.5 Herramientas Utilizadas
+
+*   Python (app.py): Se eligió Python para el backend debido a su facilidad de uso, su amplia gama de bibliotecas y su capacidad para integrarse con otras tecnologías.
+*   JavaScript (static/script.js): Se eligió JavaScript para el frontend debido a su capacidad para crear interfaces de usuario interactivas y dinámicas.
+*   HTML (templates/index.html): Se eligió HTML para la estructura de la interfaz de usuario debido a su simplicidad y su compatibilidad con todos los navegadores web.
+*   CSS (static/styles.css): Se eligió CSS para el estilo de la interfaz de usuario debido a su capacidad para crear diseños atractivos y consistentes.
+
+7.6 Validación de Valor
+
+Se realizan pruebas manuales para asegurar que las descargas se inicien correctamente, el progreso se muestre con precisión y la interfaz de usuario sea funcional. Además, se recopila la retroalimentación de los usuarios para identificar áreas de mejora y asegurar que la aplicación satisfaga sus necesidades.

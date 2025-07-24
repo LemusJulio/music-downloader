@@ -1,0 +1,13 @@
+# Downloads
+downloads/
+
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+
+# IDE / Editor specific
+.vscode/
+.idea/
