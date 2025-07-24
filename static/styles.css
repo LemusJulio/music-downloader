@@ -1,183 +1,37 @@
-body {
-    font-family: sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+/* Custom styles to complement Tailwind CSS */
+@keyframes pulse {
+    50% {
+        opacity: .5;
+    }
 }
 
-.container {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 800px;
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-h1 {
-    text-align: center;
-    color: #1877f2;
-    margin-bottom: 20px;
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
 }
 
-.input-group {
-    display: flex;
-    margin-bottom: 20px;
+.animate-bounce {
+    animation: bounce 1s infinite;
 }
 
-#url-input {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px 0 0 4px;
-    font-size: 16px;
-}
-
-#fetch-info-btn {
-    padding: 10px 20px;
-    border: none;
-    background-color: #1877f2;
-    color: #fff;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-#fetch-info-btn:hover {
-    background-color: #166fe5;
-}
-
-.hidden {
-    display: none;
-}
-
-#info-container {
-    margin-top: 20px;
-}
-
-#song-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
-.song-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.song-item:last-child {
-    border-bottom: none;
-}
-
-.song-item input[type="checkbox"] {
-    margin-right: 15px;
-}
-
-.song-item img {
-    width: 50px;
-    height: 50px;
-    border-radius: 4px;
-    margin-right: 15px;
-}
-
-.song-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.song-title {
-    font-weight: bold;
-}
-
-.song-artist {
-    color: #666;
-    font-size: 14px;
-}
-
-.download-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-#quality-select, #format-select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-#download-btn {
-    padding: 10px 20px;
-    border: none;
-    background-color: #42b72a;
-    color: #fff;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-#download-btn:hover {
-    background-color: #36a420;
-}
-
-#progress-container {
-    margin-top: 20px;
-}
-
-.progress-bar {
-    width: 100%;
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-#progress-bar-inner {
-    height: 20px;
-    width: 0;
-    background-color: #1877f2;
-    transition: width 0.2s;
-}
-
-#progress-text {
-    text-align: center;
-    font-weight: bold;
-    margin-top: 5px;
-}
-
-#completed-container {
-    margin-top: 20px;
-}
-
-#completed-list {
-    list-style: none;
-    padding: 0;
-}
-
-#completed-list li {
-    background-color: #f7f7f7;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-}
-
-#completed-list img {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    margin-right: 10px;
+/* Additional styles for custom select */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 2.5rem; /* space for arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right .7em top 50%;
+    background-size: .65em auto;
 }
