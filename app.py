@@ -26,6 +26,7 @@ if 'FFmpeg' not in config:
     config['FFmpeg'] = {}
 
 DOWNLOAD_FOLDER = config['General'].get('download_folder', 'downloads')
+PROXY = config['General'].get('proxy', None)
 FFMPEG_PATH = config['FFmpeg'].get('ffmpeg_path', r'C:\ffmpeg\ffmpeg-7.0.2-full_build\bin')
 
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
@@ -491,6 +492,9 @@ def _configure_ydl_options(quality='320', output_format='mp3'):
             }
         ]
     }
+    
+    if PROXY:
+        ydl_opts['proxy'] = PROXY
     
     # Para formatos sin pérdida, ajustar calidad
     if output_format in ['flac', 'wav']:
