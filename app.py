@@ -43,18 +43,11 @@ FFMPEG_READY = False # Global flag for FFmpeg status
 def _check_ffmpeg_path():
     """Verifica si ffmpeg es accesible en la ruta configurada."""
     global FFMPEG_READY
-    # En Vercel, no podemos empaquetar ffmpeg fácilmente, así que lo hacemos opcional.
-    if os.environ.get('VERCEL'):
-        logger.warning("Entorno Vercel detectado. FFmpeg no estará disponible.")
-        FFMPEG_READY = False
-        return False
-
     ffmpeg_executable = shutil.which('ffmpeg')
     if not ffmpeg_executable:
-        logger.warning(f"FFmpeg no encontrado en la ruta: {FFMPEG_PATH}. La funcionalidad de conversión de audio y metadatos estará deshabilitada.")
+        logger.error(f"FFmpeg no encontrado en la ruta: {FFMPEG_PATH}. Asegúrate de que FFmpeg esté instalado y su ruta esté configurada correctamente en config.ini.")
         FFMPEG_READY = False
         return False
-    
     logger.info(f"FFmpeg encontrado en: {ffmpeg_executable}")
     FFMPEG_READY = True
     return True
@@ -67,7 +60,8 @@ progress_data = {
     'total_songs': 1,
     'current_song': 0,
     'error': None,
-    'status': 'idle' # New status: idle, downloading, finished, error
+    'status': 'idle', # New status: idle, downloading, finished, error
+    'cancel_requested': False
 }
 
 def embed_thumbnail_manually(filepath, thumbnail_path, artist=None, album=None):
@@ -119,6 +113,8 @@ def embed_thumbnail_manually(filepath, thumbnail_path, artist=None, album=None):
 
 def progress_hook(d):
     with progress_data['lock']:
+        if progress_data['cancel_requested']:
+            raise Exception("Download cancelled by user.")
         if d['status'] == 'downloading':
             try:
                 percent_str = d['_percent_str']
@@ -296,6 +292,11 @@ def save_ffmpeg_path():
 @app.route('/start_download', methods=['POST'])
 def start_download():
     try:
+        if not FFMPEG_READY:
+            log_msg = "FFmpeg no está configurado correctamente. La descarga no puede iniciar."
+            logger.error(log_msg)
+            return jsonify({'error': log_msg}), 500
+
         data = request.get_json()
         url = data.get('url')
         selected_songs = data.get('selected_songs', [])
@@ -311,60 +312,61 @@ def start_download():
             progress_data['completed_songs'].clear()
             progress_data['current_song'] = 0
             progress_data['error'] = None
+            progress_data['cancel_requested'] = False
 
         def download_task():
-            logger.info("Iniciando hilo de descarga...") # Nuevo log
+            logger.info("Iniciando hilo de descarga...")
+            success = False
             try:
                 download_url = _normalize_url(url)
                 ydl_opts = _configure_ydl_options(quality)
 
-                # Obtener información primero para determinar el número total de canciones
                 total_songs = _get_total_songs(download_url)
                 with progress_data['lock']:
                     progress_data['total_songs'] = total_songs
 
-                # Configurar las canciones seleccionadas
                 _configure_playlist_items(ydl_opts, selected_songs)
 
-                # Realizar la descarga
-                logger.debug(f"Opciones de yt-dlp: {ydl_opts}") # Log de opciones
+                logger.debug(f"Opciones de yt-dlp: {ydl_opts}")
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     retries = 3
                     for attempt in range(retries):
                         try:
                             ydl.download([download_url])
-                            break  # Si la descarga tiene éxito, salir del bucle
+                            success = True
+                            break
                         except yt_dlp.utils.DownloadError as e:
                             log_msg = f"Advertencia en descarga (intento {attempt + 1}/{retries}): {e}"
                             logger.warning(log_msg)
                             with progress_data['lock']:
                                 progress_data['error'] = log_msg
-                            if attempt == retries - 1:  # Si es el último intento
+                            if attempt == retries - 1:
                                 raise
-            except Exception as e:
-                log_msg = f"Error crítico en descarga: {e}"
-                logger.exception(log_msg) # Usar logger.exception para imprimir el traceback
-                with progress_data['lock']:
-                    progress_data['error'] = log_msg
-                raise
-
-                # Si todo sale bien, marcar como terminado
-                with progress_data['lock']:
-                    progress_data['status'] = 'finished'
-                    progress_data['progress'] = 100 # Asegurar que la barra llegue al 100%
-
             except yt_dlp.utils.DownloadError as e:
                 log_msg = f"Algunos videos no pudieron descargarse: {e}"
                 logger.warning(log_msg)
                 with progress_data['lock']:
                     progress_data['error'] = log_msg
-                    progress_data['status'] = 'error' # Marcar como error
+                    progress_data['status'] = 'error'
             except Exception as e:
-                log_msg = f"Error crítico en descarga: {e}\n{traceback.format_exc()}"
-                logger.error(log_msg)
+                log_msg = f"Error crítico en descarga: {e}"
+                logger.exception(log_msg)
                 with progress_data['lock']:
                     progress_data['error'] = log_msg
-                    progress_data['status'] = 'error' # Marcar como error
+                    progress_data['status'] = 'error'
+                    if "cancelled by user" in str(e):
+                        progress_data['error'] = "Download cancelled."
+            finally:
+                if success:
+                    with progress_data['lock']:
+                        progress_data['status'] = 'finished'
+                        progress_data['progress'] = 100
+                
+                time.sleep(2)
+                
+                with progress_data['lock']:
+                    progress_data['status'] = 'idle'
+                    progress_data['progress'] = 0
 
         Thread(target=download_task).start()
         return jsonify({'status': 'started'})
@@ -381,6 +383,27 @@ def start_download():
         logger.error(f"Unexpected error: {e}\n{traceback.format_exc()}")
         return jsonify({'error': f"An unexpected error occurred: {str(e)}"}), 400
 
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    try:
+        with progress_data['lock']:
+            progress_data['completed_songs'].clear()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error clearing history: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/cancel_download', methods=['POST'])
+def cancel_download():
+    try:
+        with progress_data['lock']:
+            progress_data['cancel_requested'] = True
+        logger.info("Cancel download requested by user.")
+        return jsonify({'status': 'success', 'message': 'Cancel request received.'})
+    except Exception as e:
+        logger.error(f"Error processing cancel request: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 def _normalize_url(url):
     """Normaliza la URL para asegurar que las URLs de YouTube Music se conviertan a formato de YouTube estándar si son listas de reproducción."""
     if "music.youtube.com" in url:
@@ -390,36 +413,91 @@ def _normalize_url(url):
     return url
 
 def _configure_ydl_options(quality='320', output_format='mp3'):
+    def embed_thumbnail_hook(d):
+        if d['status'] == 'finished':
+            info = d.get('info_dict', {})
+            filepath = info.get('filepath')
+            thumbnail_url = info.get('thumbnail')
+
+            # Nos aseguramos de procesar solo MP3 y si hay thumbnail URL
+            if not filepath or not filepath.lower().endswith('.mp3'):
+                logger.warning("embed_thumbnail_hook: no es MP3 o no hay ruta")
+                return
+            if not thumbnail_url:
+                logger.warning("embed_thumbnail_hook: no se encontró thumbnail URL")
+                return
+
+            try:
+                import requests
+                # 1) Descargar .webp
+                thumb_webp = filepath + '.thumb.webp'
+                logger.info(f"Descargando thumbnail WebP: {thumbnail_url} → {thumb_webp}")
+                resp = requests.get(thumbnail_url, stream=True, timeout=10)
+                resp.raise_for_status()
+                with open(thumb_webp, 'wb') as f:
+                    for chunk in resp.iter_content(1024):
+                        f.write(chunk)
+
+                # 2) Convertir a JPG
+                thumb_jpg = filepath + '.thumb.jpg'
+                cmd_conv = [
+                    'ffmpeg', '-y',
+                    '-i', thumb_webp,
+                    thumb_jpg
+                ]
+                logger.info(f"Convertir WebP→JPG: {' '.join(cmd_conv)}")
+                subprocess.run(cmd_conv, check=True, capture_output=True, text=True)
+
+                # 3) Incrustar miniatura JPG en MP3
+                # —————— NUEVO: borrar cualquier .webp residual ——————
+                import glob
+                base = os.path.splitext(filepath)[0]
+                for f in glob.glob(f"{base}.webp"):
+                    try: os.remove(f)
+                    except: pass
+                # ————————————————————————————————————————————————
+                
+                artist = info.get('artist', '')
+                album  = info.get('album', '')
+                success = embed_thumbnail_manually(filepath, thumb_jpg, artist, album)
+                if success:
+                    logger.info("Miniatura incrustada correctamente")
+                    # Limpiar archivos temporales
+                    os.remove(thumb_webp)
+                    os.remove(thumb_jpg)
+                else:
+                    logger.error("Falló la incrustación de la miniatura JPG")
+
+            except Exception as e:
+                logger.error(f"embed_thumbnail_hook error: {e}")
+
     ydl_opts = {
-        'format': 'bestaudio/best',
+        'format': 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio/best',
         'outtmpl': os.path.join(app.config['DOWNLOAD_FOLDER'], '%(title)s.%(ext)s'),
         'progress_hooks': [progress_hook],
+        'ffmpeg_location': FFMPEG_PATH,
         'ignoreerrors': True,
         'retries': 10,
         'fragment_retries': 10,
         'skip_unavailable_fragments': True,
-        'writethumbnail': True,
-        'keepvideo': False,
+        'writethumbnail': False,  # No descargar la miniatura automáticamente
+        'keepvideo': False,      # No mantener el archivo de video
         'logger': logger,
+        'postprocessors': [
+            {
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': output_format,
+                'preferredquality': quality,
+            }
+        ]
     }
-
-    if FFMPEG_READY:
-        ydl_opts['ffmpeg_location'] = FFMPEG_PATH
-        ydl_opts['postprocessors'] = [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': output_format,
-            'preferredquality': quality,
-        }]
-        if output_format in ['flac', 'wav']:
-            ydl_opts['postprocessors'][0]['preferredquality'] = '0'
-        
-        # El hook para incrustar miniaturas solo se puede usar si FFmpeg está disponible
-        def embed_thumbnail_hook(d):
-            if d['status'] == 'finished':
-                # ... (código del hook como estaba antes)
-                pass # Placeholder para el código del hook
-        ydl_opts['postprocessor_hooks'] = [embed_thumbnail_hook]
-
+    
+    # Para formatos sin pérdida, ajustar calidad
+    if output_format in ['flac', 'wav']:
+        ydl_opts['postprocessors'][0]['preferredquality'] = '0'
+    
+    ydl_opts['postprocessor_hooks'] = [embed_thumbnail_hook]
+    
     return ydl_opts
 
 def _get_total_songs(download_url):
@@ -440,17 +518,16 @@ def _configure_playlist_items(ydl_opts, selected_songs):
         ydl_opts['playlist'] = True
 
 if __name__ == '__main__':
-    # Crear la carpeta de descargas si no existe
-    download_path = os.path.join(script_dir, app.config['DOWNLOAD_FOLDER'])
-    os.makedirs(download_path, exist_ok=True)
-    app.config['DOWNLOAD_FOLDER'] = download_path
+    os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
     # Crear archivo de configuración si no existe
-    if not os.path.exists(config_path):
+    if not os.path.exists('config.ini'):
         config['General']['download_folder'] = 'downloads'
         config['FFmpeg']['ffmpeg_path'] = r'C:\ffmpeg\ffmpeg-7.0.2-full_build\bin'
-        with open(config_path, 'w') as configfile:
+        with open('config.ini', 'w') as configfile:
             config.write(configfile)
     
-    _check_ffmpeg_path()
-    app.run(debug=True, threaded=True, port=5001)
+    if not _check_ffmpeg_path():
+        logger.error("La aplicación no se iniciará debido a que FFmpeg no está configurado correctamente.")
+    else:
+        app.run(debug=True, threaded=True, port=5001)
